@@ -38,7 +38,7 @@ class Transcoder(object):
     OUTPUT_DIRECTORY = TRANSCODER_ROOT + '/output'
     # standard options for the transcode-video script
     # H264
-    TRANSCODE_OPTIONS = '--preset slower --target big --main-audio eng --add-audo jpn,spa --add-subtitle eng,spa --burn-subtitle scan --aac-encoder ca_aac'
+    TRANSCODE_OPTIONS = '--preset slower --target big --main-audio eng --add-audio jpn,spa --add-subtitle eng,spa --burn-subtitle scan --aac-encoder ca_aac'
     # H265
     #TRANSCODE_OPTIONS = '--handbrake-option encoder=x265 --preset slower --target big --main-audio eng --add-audo jpn,spa --add-subtitle eng,spa --burn-subtitle scan --aac-encoder ca_aac'
     # Hard Coded Deinterlace

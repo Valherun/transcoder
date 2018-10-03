@@ -36,14 +36,15 @@ class Transcoder(object):
     COMPLETED_DIRECTORY = TRANSCODER_ROOT + '/completed-originals'
     # directory contained the compressed outputs
     OUTPUT_DIRECTORY = TRANSCODER_ROOT + '/output'
-    # standard options for the transcode-video script
-    # H264
-    TRANSCODE_OPTIONS = '--preset slower --target big --main-audio eng --add-audio jpn,spa --add-subtitle eng,spa --burn-subtitle scan --aac-encoder ca_aac'
-    # H265
-    #TRANSCODE_OPTIONS = '--handbrake-option encoder=x265 --preset slower --target big --main-audio eng --add-audo jpn,spa --add-subtitle eng,spa --burn-subtitle scan --aac-encoder ca_aac'
-    # Hard Coded Deinterlace
-    #TRANSCODE_OPTIONS = '--filter deinterlace --preset slower --target big --main-audio eng --add-audo jpn,spa --add-subtitle eng,spa --burn-subtitle scan --aac-encoder ca_aac'
-    
+
+    # import the transcode options from the docker's config file
+    # this means we can now update transcoder.py without affecting users individual settings
+    # only warning is that this can result in the need to docker exec directly into the docker
+    # in order read logs in /var/log/supervisor or in transcoder.log for error info.
+    # add config path to pythons paths then pull in options directly
+    sys.path.insert(0, '/config')
+    from transcoder_options import TRANSCODE_OPTIONS
+
     # number of seconds a file must remain unmodified in the INPUT_DIRECTORY
     # before it is considered done copying. increase this value for more
     # tolerance on bad network connections.
@@ -77,11 +78,6 @@ class Transcoder(object):
         out = subprocess.check_output(args=args, stderr=subprocess.STDOUT)
         return out
 
-    def mount_share(self):
-        #  Bypassing due to not using virtualbox        
-	#"""
-        return True
-
     def setup_logging(self):
         self.logger = logging.getLogger('transcoder')
         self.logger.setLevel(logging.DEBUG)
@@ -97,8 +93,6 @@ class Transcoder(object):
         dirs = (self.INPUT_DIRECTORY, self.WORK_DIRECTORY,
                 self.OUTPUT_DIRECTORY, self.COMPLETED_DIRECTORY)
         if not all(map(os.path.exists, dirs)):
-            if not self.mount_share():
-                return False
             for path in dirs:
                 if not os.path.exists(path):
                     try:
@@ -174,7 +168,6 @@ class Transcoder(object):
         meta = self.scan_media(path)
         if not meta:
             return
-        
         # Detect if the video is Interlaced
         interlace = self.detect_interlace(path)
         if not interlace:

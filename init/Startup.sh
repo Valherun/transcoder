@@ -45,8 +45,8 @@
 	apt-get install -y linux-headers-generic ruby-full
 
 	apt-get install -y build-essential dkms supervisor
-	
-	apt-get install -y mediainfo
+
+	apt-get install -y mediainfo nano
 
 	apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
@@ -86,13 +86,23 @@
 
 	# install the transcoder config file if needed
 
-	if [ ! -f "/config/transcoder.py" ]; then
+#	if [ ! -f "/config/transcoder.py" ]; then
+#
+#		cp /transcoder-files/transcoder.py /config/transcoder.py
+#
+#	fi
 
-		cp /transcoder-files/transcoder.py /config/transcoder.py
+	# install transcoder.py to local as it now pulls options from
+	# the transcoder_options config file
+	# this allows the service to be restarted without restarting docker
+	# and cleans up the amount of code present in the config file
+	cp /transcoder-files/transcoder.py /usr/local/bin
+	chmod +x /usr/local/bin/transcoder.py
 
+	#install the transcoder options file
+	if [ ! -f "/config/transcoder_options.py" ]; then
+		cp /transcoder-files/transcoder_options.py /config/transcoder_options.py
 	fi
-
-
 
 	# install the service if needed
 
@@ -120,9 +130,9 @@
 
 
 
-	cp /config/transcoder.py /usr/local/bin
-
-	chmod +x /usr/local/bin/transcoder.py
+#	cp /config/transcoder.py /usr/local/bin
+# now trying to import options from a file in /config
+#	chmod +x /usr/local/bin/transcoder.py
 
 # setup the supevisor
 	/usr/bin/supervisord -c /etc/supervisor/supervisord.conf

@@ -37,7 +37,13 @@ class Transcoder(object):
     # directory contained the compressed outputs
     OUTPUT_DIRECTORY = TRANSCODER_ROOT + '/output'
     # standard options for the transcode-video script
-    TRANSCODE_OPTIONS = '--preset slower --target big --burn-subtitle scan'
+    # H264
+    TRANSCODE_OPTIONS = '--preset slower --target big --main-audio eng --add-audo jpn,spa --add-subtitle eng,spa --burn-subtitle scan --aac-encoder ca_aac'
+    # H265
+    #TRANSCODE_OPTIONS = '--handbrake-option encoder=x265 --preset slower --target big --main-audio eng --add-audo jpn,spa --add-subtitle eng,spa --burn-subtitle scan --aac-encoder ca_aac'
+    # Hard Coded Deinterlace
+    #TRANSCODE_OPTIONS = '--filter deinterlace --preset slower --target big --main-audio eng --add-audo jpn,spa --add-subtitle eng,spa --burn-subtitle scan --aac-encoder ca_aac'
+    
     # number of seconds a file must remain unmodified in the INPUT_DIRECTORY
     # before it is considered done copying. increase this value for more
     # tolerance on bad network connections.
@@ -168,6 +174,11 @@ class Transcoder(object):
         meta = self.scan_media(path)
         if not meta:
             return
+        
+        # Detect if the video is Interlaced
+        interlace = self.detect_interlace(path)
+        if not interlace:
+            return
 
         # determine crop dimensions
         crop = self.detect_crop(path)
@@ -175,7 +186,7 @@ class Transcoder(object):
             return
 
         # transcode the video
-        work_path = self.transcode(path, crop, meta)
+        work_path = self.transcode(path, crop, meta, interlace)
         if not work_path:
             return
 
@@ -204,6 +215,27 @@ class Transcoder(object):
 
         # process out
         return out
+
+    def detect_interlace(self, path):
+        name = os.path.basename(path)
+        self.logger.info('Using Media info to detect if "%s" is interlaced', name)
+        command_parts = [
+            'mediainfo',
+            '--Inform="Video;%ScanType%"',
+            '"%s"' % path
+        ]
+        command = ' '.join(command_parts)
+        try:
+            out = self.execute(command)
+        except subprocess.CalledProcessError as ex:
+            self.logger.info('detecting of interlaced video for "%s" has failed: error "%s"', name, ex)
+            return ' '
+        out = out.strip(' \t\n\r')
+        if out == 'Interlaced':
+            return '--filter deinterlace'
+        else:
+            return ' '
+
 
     def detect_crop(self, path):
         crop_re = r'[0-9]+:[0-9]+:[0-9]+:[0-9]+'
@@ -238,7 +270,7 @@ class Transcoder(object):
             self.logger.info('Using crop "%s" for input "%s"', crop, name)
             return crop
 
-    def transcode(self, path, crop, meta):
+    def transcode(self, path, crop, meta, interlace):
         name = os.path.basename(path)
         output_name = os.path.splitext(name)[0] + '.mkv'
         output = os.path.join(self.WORK_DIRECTORY, output_name)
@@ -250,7 +282,9 @@ class Transcoder(object):
 
         command_parts = [
             'transcode-video',
+            '%s' % interlace,
             '--crop %s' % crop,
+            '--main-audio eng',
             self.parse_audio_tracks(meta),
             self.TRANSCODE_OPTIONS,
             '--output "%s"' % output,
@@ -308,7 +342,7 @@ class Transcoder(object):
             title = title.replace('"', '')
             self.logger.info('Adding audio track #%s with title: %s',
                              track['number'], title)
-            additional_tracks.append('--add-audio %s,"%s"' % (
+            additional_tracks.append('--add-audio %s="%s"' % (
                 track['number'], title.replace('"', '')))
 
         return ' '.join(additional_tracks)

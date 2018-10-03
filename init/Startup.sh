@@ -45,6 +45,8 @@
 	apt-get install -y linux-headers-generic ruby-full
 
 	apt-get install -y build-essential dkms supervisor
+	
+	apt-get install -y mediainfo
 
 	apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 

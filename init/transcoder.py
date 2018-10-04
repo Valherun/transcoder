@@ -9,7 +9,7 @@ import signal
 import subprocess
 import sys
 import time
-
+sys.dont_write_bytecode = True
 
 def non_zero_min(values):
     "Return the min value but always prefer non-zero values if they exist"

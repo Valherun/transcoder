@@ -29,3 +29,6 @@ The docker will enable to volumes to be mounted
                 
                 to do this you will need to ssh into unraid and run as root :
                 chown -R <desired user>:<desired group> <path to transcoder folder>
+
+
+&&& Had to reupload after an accidently repo delete &&&

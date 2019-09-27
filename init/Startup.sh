@@ -34,7 +34,7 @@
 
 	add-apt-repository -y ppa:stebbins/handbrake-releases
 
-	add-apt-repository -y ppa:mc3man/trusty-media
+	add-apt-repository ppa:mc3man/xerus-media
 
 	apt-get update
 

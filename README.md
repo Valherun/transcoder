@@ -1,3 +1,5 @@
+<<<< NOW DEPRECATED USE valherun/ubuntu-transcoder instead >>>>
+
 # Transcoder
 
 This is my personal unraid docker used to transcode video files using Don Melton's
